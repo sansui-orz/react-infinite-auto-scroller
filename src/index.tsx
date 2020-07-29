@@ -14,6 +14,7 @@ export function clearHeightCache() {
   map.clear();
 }
 
+const inClient = typeof window !== 'undefined';
 
 export default class InfiniteScroller extends Component<InfiniteScrollProps, {
   list: any[];
@@ -26,7 +27,7 @@ export default class InfiniteScroller extends Component<InfiniteScrollProps, {
 
   private lock = false;
 
-  private windowHeight = window.innerHeight;
+  private windowHeight = inClient ? window.innerHeight : 700;
 
   private ref = React.createRef<HTMLDivElement>();
   
@@ -43,11 +44,15 @@ export default class InfiniteScroller extends Component<InfiniteScrollProps, {
 
   componentDidMount() {
     this.updateBoxTop();
-    this.getScrollElement().addEventListener('scroll', this.onScroll, false);
+    if (inClient) {
+      this.getScrollElement().addEventListener('scroll', this.onScroll, false);
+    }
   }
 
   componentWillUnmount() {
-    this.getScrollElement().removeEventListener('scroll', this.onScroll, false);
+    if (inClient) {
+      this.getScrollElement().removeEventListener('scroll', this.onScroll, false);
+    }
   }
 
   render() {

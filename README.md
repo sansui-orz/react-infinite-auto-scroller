@@ -2,13 +2,18 @@
 
 react长列表自动优化组件
 
+👉 [demo](https://github.com/sansui-orz/react-infinite-auto-scroller/examples)
+
+👉 [react-infinite-auto-scroller](https://github.com/sansui-orz/react-infinite-auto-scroller)
+
 ## 参数
 
-| 名称 | 必填 | 备注 |
-| -- | -- | -- |
-| id | 是 | 作为列表项的key，必填且保证唯一，否则无法渲染虚拟列表 |
-| renderItem | 是 | 渲染每个列表项的函数 |
-| list | 是 | 列表数据 |
+| 名称 | 类型 | | 必填 | 备注 |
+| -- | -- | -- | -- |
+| id | string | 是 | 作为列表项的key，必填且保证唯一，否则无法渲染虚拟列表 |
+| renderItem | (item: any, index: number) => Element | 是 | 渲染每个列表项的函数 |
+| list | any[] | 是 | 列表数据 |
+| root | 类名或id | 否 | 将scroll事件监听绑定到指定节点，默认为window |
 
 用法:
 
@@ -27,6 +32,7 @@ import InfiniteScrollItem, { clearHeightCache } from './scrollItem';
         id={'id'}
         list={this.state.list}
         renderItem={(item, index) => { // 注意：item与list中的项不是同一个值，而是通过浅拷贝之后的列表项
+          // 注意item中添加了emitReportHeight事件，如需要主动改变父节点高度，请在改变的组件内手动调用
           return (
             <Item {...item} />
           );
@@ -63,8 +69,6 @@ export default class Item extends Component {
 }
 ```
 
-`emitReportHeight`方法会被传递给Item的props，注意高度变化时需要主动调用，并将变化够的高度当作参数传入。
+`emitReportHeight`方法会被传递给Item的props。
 
-👉 [demo](./examples)
-
-👉 [react-infinite-auto-scroller](https://github.com/sansui-orz/react-infinite-auto-scroller)
+默认在组件didMount时会触发一次`emitReportHeight`记录节点高度， ***注意高度变化时需要主动调用，并将变化够的高度当作参数传入***。
