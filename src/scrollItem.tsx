@@ -2,16 +2,26 @@ import React, { Component } from 'react';
 
 export default class InfiniteScrollItem extends Component<{
   is_height?: number;
+  is_loaded: boolean;
   index: number;
-  reportHeight: (index: number, height: number) => void;
+  reportHeight: (index: number, height: number, loaded: boolean) => void;
   renderItem: (data: any, index: number) => JSX.Element;
   item: any;
 }> {
   private ref = React.createRef<HTMLDivElement>();
 
+  componentDidMount() {
+    const { is_loaded, is_type, is_height } = this.props.item;
+    // 如果没有高度，则做一下兜底
+    if (is_type !== 'block' && !is_loaded && !is_height) {
+      const height = this.ref.current?.getBoundingClientRect().height;
+      height && this.changeHeight(height, false);
+    }
+  }
+
   render() {
     const item = this.props.item;
-    if (item.type === 'block') {
+    if (item.is_type === 'block') {
       return (
         <div
           style={{ height: this.props.is_height }}
@@ -33,16 +43,9 @@ export default class InfiniteScrollItem extends Component<{
     );
   }
 
-  private changeHeight = (height?: number) => {
+  private changeHeight = (height: number, loaded: boolean) => {
       if (height && height !== this.props.is_height) {
-        this.props.reportHeight(this.props.index, height);
-      } else {
-        const target = this.ref?.current;
-        const rect = target?.getBoundingClientRect();
-        if (target && rect && (this.props.is_height !== rect?.height || height)) {
-          this.props.reportHeight(this.props.index, rect.height);
-        }
+        this.props.reportHeight(this.props.index, height, !!loaded);
       }
   }
-
 }

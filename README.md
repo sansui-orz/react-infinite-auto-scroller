@@ -15,6 +15,16 @@ react长列表自动优化组件
 | list | any[] | 是 | 列表数据 |
 | root | 类名或id | 否 | 将scroll事件监听绑定到指定节点，默认为window |
 
+## api
+
+**emitReportHeight**： `(height: number, loaded: boolean) => void`
+
+该方法将用props传入列表项组件内，height表示列表项的高度，loaded表示是否加载完毕。
+
+加载完毕后需要主动调用该方法确定高度不再变化后才会被合并为空节点。
+
+**注意当异步资源加载失败，也需要主动上报高度** 否则不会被合并为空节点，如果存在大量无法合并的节点将会导致列表变卡。
+
 用法:
 
 `npm install react-infinite-auto-scroller`
@@ -44,9 +54,7 @@ import InfiniteScrollItem, { clearHeightCache } from './scrollItem';
 
 注意此处list中的列表项必须包含属性名为id的列表唯一值，不建议使用索引，因为当从头部插入或者删除中间某一项时会导致节点高度匹配数据错误。
 
-在列表项的组件中，默认会在`componentDidMount`中进行一次高度获取，如之后高度有变动（如img加载)，需要主动上报变化后的高度。
-
-例如：
+列表项需要主动上报并确认组件高度：
 
 ```jsx
 export default class Item extends Component {
@@ -55,8 +63,7 @@ export default class Item extends Component {
   componentDidMount() {
     // 注意如果高度是由异步资源决定的，那应该在异步资源加载完成之后再上报高度，因为高度一旦上报，如果此时元素未在可视区域，该元素就会被合并为一个空节点
     if (!this.props.img) {
-      const height = this.ref.current?.getBoundingClientRect().height;
-      this.props.emitReportHeight && this.props.emitReportHeight(height); // 注意didMount时一定要传height，因为此时父节点的ref还没有绑定元素，无法获取高度
+      this.reportHeight(true); // 注意即使这个组件是同步加载的也需要上报loaded为true才会合并进空节点
     }
   }
 
@@ -71,12 +78,18 @@ export default class Item extends Component {
   }
 
   private imgLoad = (e) => {
-    const height = this.ref.current?.getBoundingClientRect().height;
-    this.props.emitReportHeight && this.props.emitReportHeight(height); // 这里高度变化后主动上报高度。
+    this.reportHeight(true); // 这里高度变化后主动上报高度。
   };
+
+  private reportHeight(loaded) {
+    const height = this.ref.current?.getBoundingClientRect().height;
+    this.props.emitReportHeight && this.props.emitReportHeight(height, loaded); // 这里高度变化后主动上报高度。
+  }
 }
 ```
 
-`emitReportHeight`方法会被传递给Item的props。
+### 注意事项
 
- ***注意高度变化时需要主动调用，并将变化够的高度当作参数传入***。
+1. 请不要在组件挂载&卸载时处理特殊逻辑，比如打点等，因为优化列表后会反复移除插入组件。
+
+2. 关注依赖异步元素决定高度的列表项，当加载失败时选择重试或者上报确认高度不再变化。

@@ -8,7 +8,7 @@ export interface InfiniteScrollProps {
   renderItem: (data: any, index: number) => JSX.Element;
 }
 
-const map: Map<any, number> = new Map();
+const map: Map<any, { height: number, loaded: boolean }> = new Map();
 
 export function clearHeightCache() {
   map.clear();
@@ -36,8 +36,8 @@ export default class InfiniteScroller extends Component<InfiniteScrollProps, {
   static getDerivedStateFromProps(props: InfiniteScrollProps, state) {
     const newList = props.list.map((item, index) => {
       const key = props.id ? item[props.id] : item;
-      const height = map.get(key);
-      return { ...item, is_height: height, is_index: index };
+      const mapItem = map.get(key);
+      return { ...item, is_height: mapItem?.height, is_loaded: !!mapItem?.loaded, is_index: index };
     });
     return { ...state, list: newList };
   }
@@ -66,6 +66,7 @@ export default class InfiniteScroller extends Component<InfiniteScrollProps, {
               key={key}
               index={item.is_index}
               is_height={item.is_height}
+              is_loaded={item.is_loaded}
               reportHeight={this.reportHeight}
               renderItem={this.props.renderItem}
               item={item}
@@ -84,17 +85,17 @@ export default class InfiniteScroller extends Component<InfiniteScrollProps, {
     list.forEach((item, index) => {
       if (item.is_height) {
         top += item.is_height;
-        if (top > minTop && top < maxTop) {
+        if (!item.is_loaded || (top > minTop && top < maxTop)) {
           _list.push(item);
         } else {
           const lastItem = _list[_list.length - 1];
-          if (lastItem?.type === 'block') {
+          if (lastItem?.is_type === 'block') {
             lastItem.is_height += item.is_height;
             lastItem.maxIndex = index;
             lastItem.id = lastItem.minIndex + '/' + lastItem.maxIndex;
           } else {
             _list.push({
-              type: 'block',
+              is_type: 'block',
               is_height: item.is_height,
               maxIndex: index,
               minIndex: index,
@@ -109,11 +110,13 @@ export default class InfiniteScroller extends Component<InfiniteScrollProps, {
     return _list;
   }
 
-  private reportHeight = (index: number, height: number,) => {
+  private reportHeight = (index: number, height: number, loaded: boolean) => {
     const list: any[] = this.state.list;
     list[index].is_height = height;
+    list[index].is_loaded = loaded;
     const key = this.getMapKey(list[index]);
-    map.set(key, height);
+    // 只有当确定列表项高度不再变化了，才将高度缓存
+    map.set(key, { height, loaded });
     this.setState({ list });
   }
 

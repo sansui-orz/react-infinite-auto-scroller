@@ -4,8 +4,9 @@ interface IProps {
   text: string;
   img?: string;
   /* 下面这两个方法由无限滚动高阶组件提供，注意使用时判断是否存在 */
-  emitReportHeight?: Function; // 主动调用更新元素高度，应用场景（1. 当组件高度是异步内容决定的，2. 高度变化时主动更新父元素高度）
+  emitReportHeight?: (height: number, loaded: boolean) => void; // 主动调用更新元素高度，应用场景（1. 当组件高度是异步内容决定的，2. 高度变化时主动更新父元素高度）
   deleteHandle: () => void;
+  is_index?: number;
 }
 
 class Item extends Component<IProps> {
@@ -14,12 +15,12 @@ class Item extends Component<IProps> {
   componentDidMount() {
     if (!this.props.img) {
       const height = this.ref.current?.getBoundingClientRect().height;
-      this.props.emitReportHeight && this.props.emitReportHeight(height);
+      this.props.emitReportHeight && height && this.props.emitReportHeight(height, true);
     }
   }
 
   render() {
-    const { text, img } = this.props;
+    const { text, img, is_index } = this.props;
     return (
       <div className="item" ref={this.ref}>
         <div className="user">
@@ -28,7 +29,7 @@ class Item extends Component<IProps> {
           <div className="delete-btn" onClick={this.props.deleteHandle}>删除</div>
         </div>
         <p className="text">{text}</p>
-        {img ? <img className="img" src={img} alt="" onLoad={this.imgLoad}/> : null}
+        {img ? <img className="img" src={is_index && is_index % 10 === 0 ? 'http://maosheng.com/aaa.png' : img} alt="" onLoad={this.imgLoad}/> : null}
         <div className="controls">
           <div className="action1">
             <img src={require('./imgs/1.png').default} />
@@ -48,7 +49,7 @@ class Item extends Component<IProps> {
   }
   private imgLoad = (e) => {
     const height = this.ref.current?.getBoundingClientRect().height;
-    this.props.emitReportHeight && this.props.emitReportHeight(height);
+    this.props.emitReportHeight && height && this.props.emitReportHeight(height, true);
   };
 }
 

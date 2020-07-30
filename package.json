@@ -1,6 +1,6 @@
 {
   "name": "react-infinite-auto-scroller",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "react长列表动态优化组件",
   "main": "./lib/index.js",
   "files": [
