@@ -52,6 +52,14 @@ import InfiniteScrollItem, { clearHeightCache } from './scrollItem';
 export default class Item extends Component {
   ref = React.createRef();
 
+  componentDidMount() {
+    // 注意如果高度是由异步资源决定的，那应该在异步资源加载完成之后再上报高度，因为高度一旦上报，如果此时元素未在可视区域，该元素就会被合并为一个空节点
+    if (!this.props.img) {
+      const height = this.ref.current?.getBoundingClientRect().height;
+      this.props.emitReportHeight && this.props.emitReportHeight(height); // 注意didMount时一定要传height，因为此时父节点的ref还没有绑定元素，无法获取高度
+    }
+  }
+
   render() {
     const { text, img } = this.props;
     return (
@@ -71,4 +79,4 @@ export default class Item extends Component {
 
 `emitReportHeight`方法会被传递给Item的props。
 
-默认在组件didMount时会触发一次`emitReportHeight`记录节点高度， ***注意高度变化时需要主动调用，并将变化够的高度当作参数传入***。
+ ***注意高度变化时需要主动调用，并将变化够的高度当作参数传入***。

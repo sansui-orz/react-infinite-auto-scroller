@@ -11,6 +11,13 @@ interface IProps {
 class Item extends Component<IProps> {
   ref = React.createRef<HTMLDivElement>();
 
+  componentDidMount() {
+    if (!this.props.img) {
+      const height = this.ref.current?.getBoundingClientRect().height;
+      this.props.emitReportHeight && this.props.emitReportHeight(height);
+    }
+  }
+
   render() {
     const { text, img } = this.props;
     return (

@@ -9,12 +9,6 @@ export default class InfiniteScrollItem extends Component<{
 }> {
   private ref = React.createRef<HTMLDivElement>();
 
-  componentDidMount() {
-    if (this.props.item.type !== 'block') {
-      this.changeHeight();
-    }
-  }
-
   render() {
     const item = this.props.item;
     if (item.type === 'block') {
